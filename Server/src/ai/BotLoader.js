@@ -1,9 +1,9 @@
 // Project imports
+var path = require('path');
 var BotPlayer = require('./BotPlayer');
 var MinionPlayer = require('./MinionPlayer');
 var FakeSocket = require('./FakeSocket');
 var PacketHandler = require('../PacketHandler');
-
 function BotLoader(gameServer) {
     this.gameServer = gameServer;
     this.loadNames();
@@ -29,9 +29,9 @@ BotLoader.prototype.loadNames = function () {
     this.randomNames = [];
     var fs = require("fs");
     
-    if (fs.existsSync("./ai/BotNames.txt")) {
+    if (fs.existsSync(path.resolve("./src/ai/BotNames.txt"))) {
         // Read and parse the names - filter out whitespace-only names
-        this.randomNames = fs.readFileSync("./ai/BotNames.txt", "utf8").split(/[\r\n]+/).filter(function (x) {
+        this.randomNames = fs.readFileSync(path.resolve("./src/ai/BotNames.txt"), "utf8").split(/[\r\n]+/).filter(function (x) {
             return x != ''; // filter empty names
         });
     }
