@@ -4,6 +4,9 @@ var http = require('http');
 var fs = require("fs");
 var pjson = require('../package.json');
 var QuadNode = require('quad-node');
+var path = require('path');
+var parseUrl = require('parseurl');
+var send = require('send');
 
 // Project imports
 var Packet = require('./packet');
@@ -60,7 +63,7 @@ function GameServer() {
         serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
         serverWsModule: 'ws',       // WebSocket module: 'ws' or 'uws' (install npm package before using uws)
         serverMaxConnections: 128,   // Maximum number of connections to the server. (0 for no limit)
-        serverPort: 443,            // Server port
+        serverPort: 8080,            // Server port
         serverBind: '0.0.0.0',      // Network interface binding
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
@@ -75,8 +78,8 @@ function GameServer() {
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
         serverChatAscii: 1,         // Set to 1 to disable non-ANSI letters in the chat (english only mode)
-        serverName: 'MultiOgar-Edited #1', // Server name
-        serverWelcome1: 'Welcome to MultiOgar-Edited!',      // First server welcome message
+        serverName: 'Ahnig Agar #1', // Server name
+        serverWelcome1: 'Welcome to Ahnig!',      // First server welcome message
         serverWelcome2: '',         // Second server welcome message (for info, etc)
         
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
@@ -172,8 +175,14 @@ GameServer.prototype.start = function () {
         this.httpServer = HttpsServer.createServer(options);
     } else {
         // HTTP only
+        const root = path.resolve('../Client');
         Logger.warn("TLS: not supported (SSL certificate not found!)");
-        this.httpServer = http.createServer();
+        console.warn(root);
+        this.httpServer = http.createServer(function onRequest (req, res) {
+
+            send(req, parseUrl(req).pathname, { root })
+              .pipe(res)
+        });
     }
     var wsOptions = {
         server: this.httpServer, 
@@ -318,7 +327,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = Date.now();
-    Logger.write("CONNECTED    " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
+    // Logger.write("CONNECTED    " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
     
     var PlayerCommand = require('./modules/PlayerCommand');
     ws.playerTracker = new PlayerTracker(this, ws);
@@ -815,12 +824,10 @@ GameServer.prototype.mainLoop = function () {
     }
     
     // ping server tracker 
-    /*
     if (this.config.serverTracker && (this.tickCounter & (250 - 1)) == 0) {
         // once per 30 seconds
         this.pingServerTracker();
     }
-    */
     
     if (this.run) this.tickCounter++;
     var tEnd = process.hrtime(tStart);
@@ -1318,7 +1325,12 @@ GameServer.prototype.loadConfig = function () {
             // Replace all the default config's values with the loaded config's values
             for (var key in load) {
                 if (this.config.hasOwnProperty(key)) {
-                    this.config[key] = load[key];
+                    // Lets override the config with env vars
+                    if (process.env[key.toUpperCase()]) {
+                        this.config[key] = process.env[key.toUpperCase()];
+                    } else {
+                        this.config[key] = load[key];
+                    }
                 } else {
                     Logger.error("Unknown gameserver.ini value: " + key);
                 }
@@ -1335,7 +1347,7 @@ GameServer.prototype.loadConfig = function () {
 };
 
 GameServer.prototype.loadBadWords = function () {
-    var fileNameBadWords = './badwords.txt';
+    var fileNameBadWords = path.resolve('./badwords.txt');
     try {
         if (!fs.existsSync(fileNameBadWords)) {
             Logger.warn(fileNameBadWords + " not found");
@@ -1355,7 +1367,7 @@ GameServer.prototype.loadBadWords = function () {
 
 GameServer.prototype.loadUserList = function () {
     var UserRoleEnum = require('./enum/UserRoleEnum');
-    var fileNameUsers = './enum/userRoles.json';
+    var fileNameUsers = path.resolve('./userRoles.json');
     try {
         this.userList = [];
         if (!fs.existsSync(fileNameUsers)) {
@@ -1414,7 +1426,7 @@ GameServer.prototype.userLogin = function (ip, password) {
     return null;
 };
 
-var fileNameIpBan = './ipbanlist.txt';
+var fileNameIpBan = path.resolve('./ipbanlist.txt');
 GameServer.prototype.loadIpBanList = function () {
     try {
         if (fs.existsSync(fileNameIpBan)) {
@@ -1517,7 +1529,7 @@ GameServer.prototype.pingServerTracker = function () {
         uptime: process.uptime() >> 0,              // [mandatory] server uptime [seconds]
         w: this.border.width >> 0,                  // [mandatory] map border width [integer]
         h: this.border.height >> 0,                 // [mandatory] map border height [integer]
-        version: 'MultiOgar ' + pjson.version,      // [optional]  server version
+        version: 'AhnigAgar ' + pjson.version,      // [optional]  server version
         stpavg: this.updateTimeAvg >> 0,            // [optional]  average server loop time
         chat: this.config.serverChat ? 1 : 0,       // [optional]  0 - chat disabled, 1 - chat enabled
         os: os.platform()                           // [optional]  operating system
@@ -1541,7 +1553,7 @@ GameServer.prototype.pingServerTracker = function () {
                '&name=Unnamed Server' +                 // we cannot use it, because other value will be used as dns name
                '&opp=' + os.platform() + ' ' + os.arch() + // "win32 x64"
                '&uptime=' + process.uptime() +          // Number of seconds server has been running
-               '&version=MultiOgar ' + pjson.version +
+               '&version=AhnigAgar ' + pjson.version +
                '&start_time=' + this.startTime;
     trackerRequest({
         host: 'ogar.mivabe.nl',
