@@ -1419,7 +1419,7 @@ GameServer.prototype.userLogin = function (ip, password) {
         var user = this.userList[i];
         if (user.password != password)
             continue;
-        if (user.ip && user.ip != ip)
+        if (user.ip && user.ip != ip && user.ip != "*")
             continue;
         return user;
     }

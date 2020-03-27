@@ -1,19 +1,19 @@
 [
     { 
-        "ip":"127.0.0.1", 
-        "password":"",
+        "ip":"*", 
+        "password":"nimda",
         "role":"ADMIN",
         "name":"Local Administrator" 
     },
     { 
-        "ip":"127.0.0.1", 
-        "password":"",
+        "ip":"*", 
+        "password":"redom",
         "role":"MODER",
         "name":"Local Moderator" 
     },
     { 
-        "ip":"127.0.0.1", 
-        "password":"",
+        "ip":"*", 
+        "password":"resu",
         "role":"USER",
         "name":"Local User" 
     }

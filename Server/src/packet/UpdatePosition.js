@@ -8,7 +8,7 @@
 module.exports = UpdatePosition;
 
 UpdatePosition.prototype.build = function (protocol) {
-    var buffer = new Buffer(13);
+    var buffer = Buffer.alloc(13);
     var offset = 0;
     buffer.writeUInt8(0x11, offset, true);
     offset += 1;
