@@ -7,11 +7,12 @@
     "license": "Apache-2.0",
     "main": "src/index.js",
     "dependencies": {
+        "parseurl": "latest",
         "quad-node": "^1.0.5",
-        "vector2-node": "latest",
-        "ws": "latest",
+        "querystring": "^0.2.0",
         "send": "latest",
-        "parseurl": "latest"
+        "vector2-node": "latest",
+        "ws": "latest"
     },
     "devDependencies": {},
     "scripts": {

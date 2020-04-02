@@ -5,6 +5,7 @@ var fs = require("fs");
 var pjson = require('../package.json');
 var QuadNode = require('quad-node');
 var path = require('path');
+const { parse } = require('querystring');
 var parseUrl = require('parseurl');
 var send = require('send');
 
@@ -20,6 +21,8 @@ var Logger = require('./modules/Logger');
 // GameServer implementation
 function GameServer() {
     this.httpServer = null;
+    this.httpStatsServer = null;
+    this.httpAdminServer = null;
     this.wsServer = null;
     
     // Startup
@@ -60,7 +63,7 @@ function GameServer() {
         logVerbosity: 4,            // Console log level (0=NONE; 1=FATAL; 2=ERROR; 3=WARN; 4=INFO; 5=DEBUG)
         logFileVerbosity: 5,        // File log level
         
-        serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
+        serverTimeout: 1024,         // Seconds to keep connection alive for non-responding client
         serverWsModule: 'ws',       // WebSocket module: 'ws' or 'uws' (install npm package before using uws)
         serverMaxConnections: 128,   // Maximum number of connections to the server. (0 for no limit)
         serverPort: 8080,            // Server port
@@ -74,7 +77,8 @@ function GameServer() {
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Update interval of server stats in seconds
-        
+        serverAdminPort: 9000,
+
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
         serverChatAscii: 1,         // Set to 1 to disable non-ANSI letters in the chat (english only mode)
@@ -177,7 +181,6 @@ GameServer.prototype.start = function () {
         // HTTP only
         const root = path.resolve('../Client');
         Logger.warn("TLS: not supported (SSL certificate not found!)");
-        console.warn(root);
         this.httpServer = http.createServer(function onRequest (req, res) {
 
             send(req, parseUrl(req).pathname, { root })
@@ -197,6 +200,7 @@ GameServer.prototype.start = function () {
     this.httpServer.listen(this.config.serverPort, this.config.serverBind, this.onHttpServerOpen.bind(this));
     
     this.startStatsServer(this.config.serverStatsPort);
+    this.startAdminServer(this.config.serverAdminPort);
 };
 
 GameServer.prototype.startStatsServer = function (port) {
@@ -208,20 +212,134 @@ GameServer.prototype.startStatsServer = function (port) {
     this.getStats();
     
     // Show stats
-    this.httpServer = http.createServer(function (req, res) {
+    this.httpStatsServer = http.createServer(function (req, res) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.writeHead(200);
         res.end(this.stats);
     }.bind(this));
-    this.httpServer.on('error', function (err) {
+    this.httpStatsServer.on('error', function (err) {
         Logger.error("Stats Server: " + err.message);
     });
     
     var getStatsBind = this.getStats.bind(this);
-    this.httpServer.listen(port, function () {
+    this.httpStatsServer.listen(port, function () {
         // Stats server
         Logger.info("Started stats server on port " + port);
         setInterval(getStatsBind, this.config.serverStatsUpdate * 1000);
+    }.bind(this));
+};
+
+GameServer.prototype.startAdminServer = function (port) {
+    var that = this;
+    // Do not start the server if the port is negative
+    if (port < 1) return;
+    this.httpAdminServer = http.createServer(function (req, res) {
+           // If they pass in a basic auth credential it'll be in a header called "Authorization" (note NodeJS lowercases the names of headers in its request object)
+        if (req.url === "/superadmin" || req.url === "/") {
+            var auth = req.headers['authorization'];  // auth is in base64(username:password)  so we need to decode the base64
+            // console.log("Authorization Header is: ", auth);
+    
+            if(!auth) {     // No Authorization header was passed in so it's the first time the browser hit us
+    
+                // Sending a 401 will require authentication, we need to send the 'WWW-Authenticate' to tell them the sort of authentication to use
+                // Basic auth is quite literally the easiest and least secure, it simply gives back  base64( username + ":" + password ) from the browser
+                res.statusCode = 401;
+                res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+    
+                res.end('<html><body>Need some creds son</body></html>');
+            }
+    
+            else if(auth) {    // The Authorization was passed in so now we validate it
+    
+                var tmp = auth.split(' ');   // Split on a space, the original auth looks like  "Basic Y2hhcmxlczoxMjM0NQ==" and we need the 2nd part
+    
+                var buf = Buffer.from(tmp[1], 'base64'); // create a buffer and tell it the data coming in is base64
+                var plain_auth = buf.toString();        // read it back out as a string
+    
+                // console.log("Decoded Authorization ", plain_auth);
+    
+                // At this point plain_auth = "username:password"
+    
+                var creds = plain_auth.split(':');      // split on a ':'
+                var username = creds[0];
+                var password = creds[1];
+    
+                if((username == process.env.SUPER_ADMIN_USER ? process.env.SUPER_ADMIN_USER : 'agar') && (password == process.env.SUPER_ADMIN_PASSWORD ? process.env.SUPER_ADMIN_PASSWORD : 'agaragar')) {   // Is the username/password correct?
+                    var body = "";
+                    if (req.method === "POST"){
+                        req.on("data", function (chunk) {
+                            body += chunk.toString();
+                        });
+                        req.on('end', () => {
+                            var ct = parse(body);
+                            var answer = "<li>";
+                            // var ct = parse(body).split("=");
+                            if (ct && ct.command && typeof ct.command == "string") {
+                                var cmd = ct.command;
+
+                                var split = cmd.split(" ");
+    
+                                // Process the first string value
+                                var first = split[0].toLowerCase();
+                                
+                                // Get command function
+                                var execute = that.commands[first];
+                                if (typeof execute != 'undefined') {
+                                    answer += "Command found: executing</li>"
+                                    try {
+                                        let cmd_response = execute(that, split);
+                                        for (let ik = 0; ik < cmd_response.length; ik++) {
+                                            const element = cmd_response[ik];
+                                            answer += ("<li>" + element + "</li>");
+                                        }
+                                    } catch (e) {
+                                        answer += "<li>something went wrong</li>";
+                                        Logger.error(e);
+                                    }
+                                } else {
+                                    answer = "Invalid Command: " + cmd + "</li>";
+                                }
+
+                                res.statusCode = 200;  // OK
+                                // answer = cmd;
+                            } else {
+                                res.statusCode = 501
+                                answer += "command not found</li>"
+                            }
+                            res.end('<html><body><ul style="list-style-type:none;padding:0;">'+answer+'</ul><form method="POST"><input tabindex="0" name="command" style="width: calc(100% - 50px)" type="text" /><button style="width:40px;margin: 0 5px;" type="submit">Send</button></form></body></html>');
+                        
+                            res.end('ok');
+                        });
+                    } else {
+                        res.statusCode = 200;  // OK
+                        res.end('<html><body><form method="POST"><input tabindex="0" name="command" style="width: calc(100% - 50px)" type="text" /><button style="width:40px;margin: 0 5px;" type="submit">Send</button></form></body></html>');
+                    }
+                }
+                else {
+                        res.statusCode = 401; // Force them to retry authentication
+                        res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+    
+                        // res.statusCode = 403;   // or alternatively just reject them altogether with a 403 Forbidden
+    
+                        res.end('<html><body>You shall not pass</body></html>');
+                }
+            }
+        } else {
+
+            // res.setHeader('Access-Control-Allow-Origin', '*');
+            res.writeHead(404);
+            res.end();
+        }
+        
+    }.bind(this));
+    this.httpAdminServer.on('error', function (err) {
+        Logger.error("Admin Server: " + err.message);
+    });
+    
+    this.httpAdminServer.listen(port, function () {
+        // Stats server
+        Logger.info("Started admin server on port " + port);
+
     }.bind(this));
 };
 
@@ -303,6 +421,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
         Logger.writeError("[" + logip + "] " + err.stack);
     });
     if (this.config.serverMaxConnections > 0 && this.socketCount >= this.config.serverMaxConnections) {
+        Logger.warn("[" + this.socketCount + "] max slots reached.");
         ws.close(1000, "No slots");
         return;
     }

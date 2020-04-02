@@ -140,3 +140,15 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+.logo {
+    width: 100px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    margin-top: 4rem;
+}
+#subtitle {
+    font-size: 18px;
+    text-align: center;
+    padding-bottom: 1rem;
+}

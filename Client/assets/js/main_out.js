@@ -9,7 +9,7 @@
         }
     };
 
-    var touchX, touchY,
+    var touchX, touchY,rMacro,
         touchable = 'createTouch' in document,
         touches = [];
 
@@ -1035,10 +1035,23 @@
     var playerStat = null;
     wHandle.isSpectating = false;
     wHandle.setNick = function(arg) {
-        hideOverlays();
-        userNickName = arg;
-        sendNickName();
-        userScore = 0
+        document.getElementById("hint").style.display = 'none';
+        var nr = /^\[\S+\]+([A-Za-z0-9\. -]+)/;
+        var c = nr.exec(arg);
+        if (nr.test(arg) && c && c.length){
+            var _ = c[0];
+            if (_ == "[NOOB]Minion") {
+                var ch = "abcdefghijklmnopqrstuvwxyz";
+                var rnd = Math.floor(Math.random() * (+ch.length - +1)) + +1
+                _ += (" " +  rnd + "" + ch[rnd] );
+            }
+            hideOverlays();
+            userNickName = _;
+            sendNickName();
+            userScore = 0
+        } else {
+            document.getElementById("hint").style.display = 'block';
+        }
     };
     wHandle.setSkins = function(arg) {
         showSkin = arg
