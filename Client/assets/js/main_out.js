@@ -1151,7 +1151,7 @@
         z = 1,
         scoreText = null,
         skins = {},
-        knownNameDict = "".split(";"),
+        knownNameDict = "koch, ron, zanz, niqo, wale".split(";"),
         knownNameDict_noDisp = [],
         ib = ["_canvas'blob"];
     Cell.prototype = {
