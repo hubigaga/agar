@@ -147,6 +147,9 @@ body {
     display: flex;
     margin-top: 4rem;
 }
+#title {
+    text-align: center;
+}
 #subtitle {
     font-size: 18px;
     text-align: center;

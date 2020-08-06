@@ -33,7 +33,6 @@
                     <h4 id="inPageModalTitle" class="modal-title">Failed to Load</h4>
                 </div>
                 <div id="inPageModalBody" class="modal-body">
-                    <p>Make sure you have jquery locally!</p>
                     <div class="center">
                         <div class="loader"></div>
                     </div>
@@ -50,6 +49,7 @@
                 <div class="form-group">
                    <!-- <a href="https://www.youtube.com/channel/UChTWEayDAtKsU-f08vptiFQ">  -->
                    <!-- <img src="assets/img/dd.png" width="100" height="100"> -->
+                   <h2 id="title">Ahnig Agar Server (AAS)</h2>
                    <svg class="logo" version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                         viewBox="0 0 212 210.5" style="enable-background:new 0 0 212 210.5;" xml:space="preserve">
                         <style type="text/css">
@@ -70,13 +70,13 @@
                             c0,0-2,9.5,0,14.4c0,0,0.3,4.2-2.8,1.4l-1.2-3l0.2,5.4c0,0-2.8,2.8-3.6,0c0,0-1.7,3.1-3,0l0.8-9.5c0,0-4.1,5.7-4.6,0.3
                             c0,0,0.8-5.2,4-6.9c0,0,1.2-9.4-3.5-11.9"/>
                     </svg>
-				   </a>
-                    <h2 id="title">Welcome to the ahnig</h2>
-                    <h3 id="subtitle">you may enter with: [Klasse]Vorname</h3>
+				   <!-- </a> -->
+
+                    <h3 id="subtitle">you may enter with: [Klasse] Vorname</h3>
                 </div>
 				
 				<div class="form-group">
-                <input id="nick" class="form-control save" data-box-id="0" placeholder="Minion" value="[NOOB]Minion" maxlength="15" />
+                <input id="nick" class="form-control save" data-box-id="0" placeholder="Minion" value="[7A]ahnig" maxlength="25" />
                     <!-- <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
                         <option selected disabled>Gamemode:</option>
                         <option value="127.0.0.1:8081">FFS</option>
@@ -86,9 +86,9 @@
                 </div>
 
                 <div class="form-group">
-                    <!-- <div class="mb-10">
+                    <div class="mb-10">
                         <a data-toggle="modal" data-target="#inPageModal" onclick="openSkinsList();" class="btn-primary btn btn-info" role="button" style="width: 100%;">Skins Gallery</a>
-                    </div> -->
+                    </div>
                     <p id="hint" style="display: none;color:red;font-weight: bold;text-align: center;">Please follow the rules</p>
                     <button type="submit" id="play-btn" onclick="setNick(document.getElementById('nick').value); return false;" class="btn btn-play btn-primary btn-needs-server">Play</button>
                     <button onclick="$('#settings, #instructions').toggle(); return false;" class="btn btn-info btn-settings" id="settings-btn"><i class="glyphicon glyphicon-cog"></i></button>
@@ -151,5 +151,15 @@
     <div style="font-family:'Ubuntu'">&nbsp;</div>
 
     <script src="assets/js/bootstrap.min.js"></script>
+    <script>
+        var date = new Date();
+        var now = date.getHours();
+        if (now > 19 || now < 7) {
+            setDarkTheme(true);
+            setSmooth(true);
+        }
+        // console.log(now)
+
+    </script>
 </body>
 </html>

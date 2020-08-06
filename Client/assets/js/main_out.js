@@ -1035,15 +1035,20 @@
     var playerStat = null;
     wHandle.isSpectating = false;
     wHandle.setNick = function(arg) {
+        var _;
         document.getElementById("hint").style.display = 'none';
-        var nr = /^\[\S+\]+([A-Za-z0-9\. -]+)/;
-        var c = nr.exec(arg);
-        if (nr.test(arg) && c && c.length){
-            var _ = c[0];
-            if (_ == "[NOOB]Minion") {
-                var ch = "abcdefghijklmnopqrstuvwxyz";
-                var rnd = Math.floor(Math.random() * (+ch.length - +1)) + +1
-                _ += (" " +  rnd + "" + ch[rnd] );
+        var nr = /^(\<\S+\>|\[\S+\])+([A-Za-z0-9_äÄöÖüÜß\. -]+)/;
+
+        if (arg && nr.test(arg)){
+            var c = nr.exec(arg);
+            if (c && c.length) {
+                _ = c[0];
+                if (_ == "[7A]ahnig") {
+                    var ch = "abcdefghijklmnopqrstuvwxyz";
+                    var rnd = Math.floor(Math.random() * (+ch.length - +1)) + +1
+                    _ = "<ah>" + (" " +  rnd + "" + ch[rnd] );
+
+                }
             }
             hideOverlays();
             userNickName = _;
@@ -1090,7 +1095,7 @@
     };
     wHandle.openSkinsList = function(arg) {
         if ($('#inPageModalTitle').text() != "Skins") {
-            $.get('include/gallery.php').then(function(data) {
+            $.get('include/gallery.html').then(function(data) {
                 $('#inPageModalTitle').text("Skins");
                 $('#inPageModalBody').html(data);
             });
@@ -1147,13 +1152,13 @@
     var delay = 500,
         oldX = -1,
         oldY = -1,
-        Canvas = null,
         z = 1,
         scoreText = null,
         skins = {},
-        knownNameDict = "koch, ron, zanz, niqo, wale".split(";"),
-        knownNameDict_noDisp = [],
-        ib = ["_canvas'blob"];
+        knownNameDict = "koch;ron;ah;gr;zanz;niqo;wale".split(";"),
+        knownNameDict_noDisp = [];
+        // Canvas = null,
+        // ib = ["_canvas'blob"];
     Cell.prototype = {
         id: 0,
         points: null,
