@@ -308,7 +308,7 @@ GameServer.prototype.startAdminServer = function (port) {
                             }
                             res.end('<html><body><ul style="list-style-type:none;padding:0;">'+answer+'</ul><form method="POST"><input tabindex="0" name="command" style="width: calc(100% - 50px)" type="text" /><button style="width:40px;margin: 0 5px;" type="submit">Send</button></form></body></html>');
                         
-                            res.end('ok');
+                            // res.end('ok');
                         });
                     } else {
                         res.statusCode = 200;  // OK
