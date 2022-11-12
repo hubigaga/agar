@@ -14,6 +14,6 @@ COPY ./Server/ /usr/src/app/
 COPY ./Client/ /usr/src/Client/
 
 
-EXPOSE 8080
+EXPOSE 88 8080 9000
 
 CMD [ "node", "src/index.js" ]
