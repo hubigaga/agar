@@ -7,13 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Eat cells smaller than you and don't get eaten by the bigger ones, as an MMO">
     <meta name="keywords"
-        content="agario, agar, io, cell, cells, virus, bacteria, blob, game, games, web game, html5, fun, flash">
+        content="agario, agar, io, cell, cells, virus, bacteria, blob, game, games, web game, html5, fun">
     <meta name="robots" content="index, follow">
     <meta name="viewport"
         content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <title>Ahnig Agar Server (AAS)</title>
+    <title>Agar Agar</title>
 
     <link id="favicon" rel="icon" type="image/png" href="assets/img/favicon.png" />
     <link href='fonts/font.css' rel='stylesheet' type='text/css'>
@@ -175,14 +175,12 @@
     <script src="assets/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(()=> {
-                setDarkTheme(true);
-                var date = new Date();
-                var now = date.getHours();
-                if (now > 19 || now < 7) {
-                    setSmooth(true);
-                }
-            }, 1000);
+            setDarkTheme(true);
+            var date = new Date();
+            var now = date.getHours();
+            if (now > 19 || now < 7) {
+                setSmooth(true);
+            }
         });
     </script>
 </body>
