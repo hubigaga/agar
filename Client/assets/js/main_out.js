@@ -1155,10 +1155,12 @@
         z = 1,
         scoreText = null,
         skins = {},
+
         knownNameDict = "koch;ron;ah;gr;zanz;niqo;wale".split(";"),
         knownNameDict_noDisp = [];
         // Canvas = null,
         // ib = ["_canvas'blob"];
+
     Cell.prototype = {
         id: 0,
         points: null,
