@@ -9,7 +9,7 @@
         }
     };
 
-    var touchX, touchY,
+    var touchX, touchY,rMacro,
         touchable = 'createTouch' in document,
         touches = [];
 
@@ -1035,10 +1035,28 @@
     var playerStat = null;
     wHandle.isSpectating = false;
     wHandle.setNick = function(arg) {
-        hideOverlays();
-        userNickName = arg;
-        sendNickName();
-        userScore = 0
+        var _;
+        document.getElementById("hint").style.display = 'none';
+        var nr = /^(\<\S+\>|\[\S+\])+([A-Za-z0-9_äÄöÖüÜß\. -]+)/;
+
+        if (arg && nr.test(arg)){
+            var c = nr.exec(arg);
+            if (c && c.length) {
+                _ = c[0];
+                if (_ == "[7A]ahnig") {
+                    var ch = "abcdefghijklmnopqrstuvwxyz";
+                    var rnd = Math.floor(Math.random() * (+ch.length - +1)) + +1
+                    _ = "<ah>" + (" " +  rnd + "" + ch[rnd] );
+
+                }
+            }
+            hideOverlays();
+            userNickName = _;
+            sendNickName();
+            userScore = 0
+        } else {
+            document.getElementById("hint").style.display = 'block';
+        }
     };
     wHandle.setSkins = function(arg) {
         showSkin = arg
@@ -1077,7 +1095,7 @@
     };
     wHandle.openSkinsList = function(arg) {
         if ($('#inPageModalTitle').text() != "Skins") {
-            $.get('include/gallery.php').then(function(data) {
+            $.get('include/gallery.html').then(function(data) {
                 $('#inPageModalTitle').text("Skins");
                 $('#inPageModalBody').html(data);
             });
@@ -1134,13 +1152,15 @@
     var delay = 500,
         oldX = -1,
         oldY = -1,
-        Canvas = null,
         z = 1,
         scoreText = null,
         skins = {},
-        knownNameDict = "ron;koch;zanz;niqo,wale".split(";"),
-        knownNameDict_noDisp = [],
-        ib = ["_canvas'blob"];
+
+        knownNameDict = "koch;ron;ah;gr;zanz;niqo;wale".split(";"),
+        knownNameDict_noDisp = [];
+        // Canvas = null,
+        // ib = ["_canvas'blob"];
+
     Cell.prototype = {
         id: 0,
         points: null,
