@@ -82,8 +82,8 @@ function GameServer() {
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
         serverChatAscii: 1,         // Set to 1 to disable non-ANSI letters in the chat (english only mode)
-        serverName: 'Ahnig Agar #1', // Server name
-        serverWelcome1: 'Welcome to Ahnig!',      // First server welcome message
+        serverName: 'Hofmatt Agar #1', // Server name
+        serverWelcome1: 'Aber Hallo!!',      // First server welcome message
         serverWelcome2: '',         // Second server welcome message (for info, etc)
         
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
@@ -1648,7 +1648,7 @@ GameServer.prototype.pingServerTracker = function () {
         uptime: process.uptime() >> 0,              // [mandatory] server uptime [seconds]
         w: this.border.width >> 0,                  // [mandatory] map border width [integer]
         h: this.border.height >> 0,                 // [mandatory] map border height [integer]
-        version: 'AhnigAgar ' + pjson.version,      // [optional]  server version
+        version: 'HofAgar ' + pjson.version,      // [optional]  server version
         stpavg: this.updateTimeAvg >> 0,            // [optional]  average server loop time
         chat: this.config.serverChat ? 1 : 0,       // [optional]  0 - chat disabled, 1 - chat enabled
         os: os.platform()                           // [optional]  operating system
@@ -1672,7 +1672,7 @@ GameServer.prototype.pingServerTracker = function () {
                '&name=Unnamed Server' +                 // we cannot use it, because other value will be used as dns name
                '&opp=' + os.platform() + ' ' + os.arch() + // "win32 x64"
                '&uptime=' + process.uptime() +          // Number of seconds server has been running
-               '&version=AhnigAgar ' + pjson.version +
+               '&version=HofAgar ' + pjson.version +
                '&start_time=' + this.startTime;
     trackerRequest({
         host: 'ogar.mivabe.nl',
