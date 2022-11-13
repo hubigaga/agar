@@ -19,6 +19,6 @@ agar.games.tld {
 }
 
 admin.agar.games.tld {
-    reverse_proxy 127.0.0.1:9000
+    reverse_proxy 127.0.0.1:8090
 }
 ```
