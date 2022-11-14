@@ -62,7 +62,7 @@ body {
 
 #helloDialog {
     width: 400px;
-    background-color: #FFFFFF;
+    background-color: #AA00FF;
     margin: 10px auto;
     border-radius: 15px;
     padding: 5px 15px 5px 15px;
@@ -111,10 +111,12 @@ body {
 #settings-btn {
     width: 13%;
     float: right;
+    color: gold;
 }
 
 #spectate-btn {
     margin-top: -5px;
+    color: silver;
 }
 
 /* CLASSES */
