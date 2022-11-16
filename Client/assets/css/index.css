@@ -111,7 +111,12 @@ body {
 #settings-btn {
     width: 13%;
     float: right;
-    color: gold;
+    color: #f0e5ed;
+    color: #FFFF00;
+    background: #FGFG00;
+    text-shadow: #FFF 0px 0px 5px, #FFF 0px 0px 10px, #FFF 0px 0px 15px, #FF2D95 0px 0px 20px, #FF2D95 0px 0px 30px, #FF2D95 0px 0px 40px, #FF2D95 0px 0px 50px, #FF2D95 0px 0px 75px;
+    color: #FFFFFF;
+    background: #DA59DE;
 }
 
 #spectate-btn {
@@ -154,6 +159,17 @@ body {
     display: flex;
     margin-top: 4rem;
 }
+
+
+.st0 {
+    fill: #7C24E2;
+    color: #FFFF00;
+    background: #FGFG00;
+    text-shadow: #FFF 0px 0px 5px, #FFF 0px 0px 10px, #FFF 0px 0px 15px, #FF2D95 0px 0px 20px, #FF2D95 0px 0px 30px, #FF2D95 0px 0px 40px, #FF2D95 0px 0px 50px, #FF2D95 0px 0px 75px;
+    color: #FFFFFF;
+    background: #3F00FF;
+}
+                        
 #title {
     text-align: center;
 }
