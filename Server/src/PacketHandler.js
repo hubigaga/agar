@@ -69,6 +69,8 @@ PacketHandler.prototype.handshake_onCompleted = function (protocol, key) {
         22: this.message_onKeyE.bind(this),
         23: this.message_onKeyR.bind(this),
         24: this.message_onKeyT.bind(this),
+        26: this.message_onKeyLeft.bind(this),
+        27: this.message_onKeyRight.bind(this),
         99: this.message_onChat.bind(this),
         254: this.message_onStat.bind(this),
     };
@@ -241,6 +243,16 @@ PacketHandler.prototype.message_onKeyT = function (message) {
             client.frozen = player.minionFrozen;
         }
     }
+};
+
+PacketHandler.prototype.message_onKeyLeft = function(message) {
+    if (message.length !== 1) return;
+    this.gameServer.fireSideCannon(this.socket.playerTracker, -1);
+};
+
+PacketHandler.prototype.message_onKeyRight = function(message) {
+    if (message.length !== 1) return;
+    this.gameServer.fireSideCannon(this.socket.playerTracker, 1);
 };
 
 PacketHandler.prototype.message_onChat = function (message) {
