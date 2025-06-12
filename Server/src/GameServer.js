@@ -176,15 +176,53 @@ GameServer.prototype.start = function () {
             cert: fs.readFileSync(pathCert, 'utf8')
         };
         Logger.info("TLS: supported");
-        this.httpServer = HttpsServer.createServer(options);
+        const root = path.resolve('../Client');
+        this.httpServer = HttpsServer.createServer(options, function(req, res) {
+            const url = parseUrl(req).pathname;
+            if (url === '/avatars') {
+                const avatarDir = path.resolve('../Client/avatars');
+                fs.readdir(avatarDir, function(err, files) {
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    if (err) {
+                        res.writeHead(500);
+                        res.end('[]');
+                        return;
+                    }
+                    files = files.filter(function(f) {
+                        return /\.(png|jpg|jpeg|gif)$/i.test(f);
+                    });
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(files));
+                });
+                return;
+            }
+            send(req, url, { root }).pipe(res);
+        });
     } else {
         // HTTP only
         const root = path.resolve('../Client');
         Logger.warn("TLS: not supported (SSL certificate not found!)");
         this.httpServer = http.createServer(function onRequest (req, res) {
-
-            send(req, parseUrl(req).pathname, { root })
-              .pipe(res)
+            const url = parseUrl(req).pathname;
+            if (url === '/avatars') {
+                const avatarDir = path.resolve('../Client/avatars');
+                fs.readdir(avatarDir, function (err, files) {
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    if (err) {
+                        res.writeHead(500);
+                        res.end('[]');
+                        return;
+                    }
+                    files = files.filter(function (f) {
+                        return /\.(png|jpg|jpeg|gif)$/i.test(f);
+                    });
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(files));
+                });
+                return;
+            }
+            send(req, url, { root })
+                .pipe(res);
         });
     }
     var wsOptions = {
@@ -1416,6 +1454,45 @@ GameServer.prototype.shootVirus = function (parent, angle) {
     
     // Add to moving cells list
     this.addNode(newVirus);
+};
+
+GameServer.prototype.fireSideCannon = function (client, dir) {
+    if (!this.canEjectMass(client))
+        return;
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+        if (!cell) continue;
+        if (cell._size < this.config.playerMinSplitSize) continue;
+
+        var size2 = this.config.ejectSize;
+        var sizeLoss = this.config.ejectSizeLoss;
+        var sizeSquared = cell._sizeSquared - sizeLoss * sizeLoss;
+        var size1 = Math.sqrt(sizeSquared);
+
+        var dx = client.mouse.x - cell.position.x;
+        var dy = client.mouse.y - cell.position.y;
+        var dl = Math.sqrt(dx * dx + dy * dy);
+        if (dl < 1) { dx = 1; dy = 0; dl = 1; }
+        dx /= dl; dy /= dl;
+
+        var angle = Math.atan2(dx, dy);
+        if (isNaN(angle)) angle = Math.PI / 2;
+
+        angle += dir * Math.PI / 2;
+
+        cell.setSize(size1);
+
+        var pos = {
+            x: cell.position.x + Math.sin(angle) * cell._size,
+            y: cell.position.y + Math.cos(angle) * cell._size
+        };
+
+        var ejected = new Entity.EjectedMass(this, null, pos, size2);
+        ejected.ejector = cell;
+        ejected.setColor(cell.color);
+        ejected.setBoost(780, angle);
+        this.addNode(ejected);
+    }
 };
 
 GameServer.prototype.getPlayerById = function (id) {

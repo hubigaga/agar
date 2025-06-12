@@ -66,6 +66,8 @@
             rPressed = false,
             tPressed = false,
             pPressed = false,
+            leftPressed = false,
+            rightPressed = false,
             wPressed = false;
         wHandle.onkeydown = function(event) {
             switch (event.keyCode) {
@@ -130,6 +132,20 @@
                         pPressed = true;
                     }
                     break;
+                case 90: // Z - left cannon
+                    if (!leftPressed && (!isTyping)) {
+                        sendMouseMove();
+                        sendUint8(26);
+                        leftPressed = true;
+                    }
+                    break;
+                case 88: // X - right cannon
+                    if (!rightPressed && (!isTyping)) {
+                        sendMouseMove();
+                        sendUint8(27);
+                        rightPressed = true;
+                    }
+                    break;
                 case 27: // esc
                     showOverlays(true);
                     break;
@@ -161,11 +177,17 @@
                 case 80:
                     pPressed = false;
                     break;
+                case 90:
+                    leftPressed = false;
+                    break;
+                case 88:
+                    rightPressed = false;
+                    break;
             }
         };
         wHandle.onblur = function() {
             sendUint8(19);
-            wPressed = spacePressed = qPressed = ePressed = rPressed = tPressed = pPressed = false
+            wPressed = spacePressed = qPressed = ePressed = rPressed = tPressed = pPressed = leftPressed = rightPressed = false
         };
 
         wHandle.onresize = canvasResize;
@@ -1146,6 +1168,31 @@
                     knownNameDict.push(response[i]);
                 }
             }
+        }
+    });
+
+    var knownAvatars = [];
+    $.getJSON('/avatars', function(list) {
+        knownAvatars = list;
+        var select = $('#avatarSelect');
+        select.append($('<option>').attr('value', '').text('Avatar wählen'));
+        list.forEach(function(item) {
+            select.append($('<option>').attr('value', item).text(item));
+        });
+        var saved = wHandle.localStorage ? wHandle.localStorage.getItem('selectedAvatar') : null;
+        if (saved && list.indexOf(saved) !== -1) {
+            select.val(saved);
+            $('#avatarPreview').attr('src', 'avatars/' + saved).show();
+        }
+    });
+    $('#avatarSelect').on('change', function() {
+        var val = $(this).val();
+        if (val) {
+            $('#avatarPreview').attr('src', 'avatars/' + val).show();
+            if (wHandle.localStorage) wHandle.localStorage.setItem('selectedAvatar', val);
+        } else {
+            $('#avatarPreview').hide();
+            if (wHandle.localStorage) wHandle.localStorage.removeItem('selectedAvatar');
         }
     });
 
