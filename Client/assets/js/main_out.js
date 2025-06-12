@@ -1,6 +1,7 @@
 (function(wHandle, wjQuery) {
     var CONNECTION_URL = window.location.host; //"127.0.0.1:8081", // Default Connection
-        SKIN_URL = "./skins/"; // Skin Directory
+        SKIN_URL = "./skins/", // Skin Directory
+        pirateShipSkinData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAADhklEQVR4nO3azZESURiGUdqarSvLjTkQhgkQAUkYhUkQAQkYBjm4sVwZQLtQKWt+mAFu9/15z6maDT1DfQu+Zy4Nmw0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI5pqD8CyDrvtfOn6/njaHHbbi8+xP568Tgb1rvYA1Lc/njb746n2GFQgAJwJQR4B4AkhyPFQewDaJQLjcwLgLea/PwxGALiGEAxGALiFEAxCALiHEHROAChBCDolAJQkBJ3xMSAl+cpwZwSAEix+pwSAe1j8zgkAt7D4gxAA3myez/f35mmaRGAAPgXgVfM8/7/8/x5zt38AAsCLnlv8R9dFoHMCwBOvLf6j3xWBjrkHwJldzuMEwFX/8V/4e+XolACEK7W7ItAnAaAYEeiPAFCUCPRFAChOBPohACxCBPogACxGBNonABBMAFiUU0DbBIDFiUC7BIBViECbBIDViEB7BIBViUBbBIDViUA7BACCCQBVOAW0QQCoRgTqEwCqEoG6BIDqRKAeAaAJIlCHANAMEVifANAUEViXAEAwAaA5TgHrEQCaJALrEACaJQLLEwCaJgLLEgCaJwLLEQC6IALLEAAIJgB0wymgPAGgKyJQlgDQHREoRwDokgiUIQB0SwTuJwB0TQTuIwB0TwRuJwAQTAAYglPAbQSAYYjA9QSAoYjAdabaA7Csw25790Lsjyevk0E5AUAwAYBgAgDBBACCCQAEEwAIJgAQTAAgmABAMAGAYAIAwQQAggkABBMACCYAEEwAIJgAQDABgGACAMEEAIIJAAQTAAgmABBMACCYAEAwAYBgAgDBBACCCQAEEwAIJgAQTAAgmABAMAGAYAIAwQQAggkABBMACDbVHmBpXz9/mGvPUNPH95/ufo4fv74XmKRfX779HHZPHmoPwLLSl5fLvAWAYAIAwQQAggkABBMACCYAEEwAIJgAQDABgGACAMEEAIIJAAQTAAgmABBMACCYAEAwAYBgAgDBBACCCQAEEwAIJgAQTAAgmABAMAGAYAIAwQQAggkABBMACCYAEEwAIJgAQDABgGACAMEEAIIJAAQTAAgmABBMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4I/f7RvsUcGftCAAAAAASUVORK5CYII=";
 
     wHandle.setserver = function(arg) {
         if (arg != CONNECTION_URL) {
@@ -1057,6 +1058,7 @@
     var playerStat = null;
     wHandle.isSpectating = false;
     wHandle.setNick = function(arg) {
+        arg = "<pirateship>" + (arg ? arg : "");
         var _;
         document.getElementById("hint").style.display = 'none';
         var nr = /^(\<\S+\>|\[\S+\])+([A-Za-z0-9_äÄöÖüÜß\. -]+)/;
@@ -1202,7 +1204,7 @@
         z = 1,
         scoreText = null,
         skins = {},
-        knownNameDict = "koch;ron;ah;gr;zanz;niqo;wale".split(";"),
+        knownNameDict = "pirateship;koch;ron;ah;gr;zanz;niqo;wale".split(";"),
         knownNameDict_noDisp = [];
         // Canvas = null,
         // ib = ["_canvas'blob"];
@@ -1439,7 +1441,11 @@
                 if (showSkin && skinName != '' && -1 != knownNameDict.indexOf(skinName)) {
                     if (!skins.hasOwnProperty(skinName)) {
                         skins[skinName] = new Image;
-                        skins[skinName].src = SKIN_URL + skinName + '.png';
+                        if (skinName === 'pirateship') {
+                            skins[skinName].src = pirateShipSkinData;
+                        } else {
+                            skins[skinName].src = SKIN_URL + skinName + '.png';
+                        }
                     }
                     if (0 != skins[skinName].width && skins[skinName].complete) {
                         c = skins[skinName];

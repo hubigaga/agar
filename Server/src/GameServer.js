@@ -1464,7 +1464,6 @@ GameServer.prototype.fireSideCannon = function (client, dir) {
         if (!cell) continue;
         if (cell._size < this.config.playerMinSplitSize) continue;
 
-        var size2 = this.config.ejectSize;
         var sizeLoss = this.config.ejectSizeLoss;
         var sizeSquared = cell._sizeSquared - sizeLoss * sizeLoss;
         var size1 = Math.sqrt(sizeSquared);
@@ -1482,16 +1481,7 @@ GameServer.prototype.fireSideCannon = function (client, dir) {
 
         cell.setSize(size1);
 
-        var pos = {
-            x: cell.position.x + Math.sin(angle) * cell._size,
-            y: cell.position.y + Math.cos(angle) * cell._size
-        };
-
-        var ejected = new Entity.EjectedMass(this, null, pos, size2);
-        ejected.ejector = cell;
-        ejected.setColor(cell.color);
-        ejected.setBoost(780, angle);
-        this.addNode(ejected);
+        this.shootVirus(cell, angle);
     }
 };
 
