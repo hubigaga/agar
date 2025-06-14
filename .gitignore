@@ -1,2 +1,5 @@
-Client/.DS_Store
-Client/avatars/*
+# Ignore runtime uploads and Python artifacts
+geotext/uploads/
+__pycache__/
+*.pyc
+*.pyo
