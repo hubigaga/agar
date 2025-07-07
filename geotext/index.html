@@ -38,6 +38,7 @@
         #map{ position:relative; width:100%; height:60vh; border:3px solid #FF2D95; box-shadow:0 0 15px #FF2D95; }
         .mapboxgl-marker-anchor-center{ display:flex; flex-direction:column; align-items:center; }
         .marker-dot{ width:14px; height:14px; border-radius:50%; border:2px solid #FFFFFF; box-shadow:0 0 10px #FF2D95; z-index:2; }
+        .radius-mask{ position:absolute; border-radius:50%; background:rgba(255,45,149,0.15); border:1px solid rgba(255,45,149,0.4); pointer-events:none; }
         .user-marker{ width:20px; height:20px; border-radius:50%; border:2px solid #FFFFFF; cursor:pointer; box-shadow:0 0 15px #FF2D95; }
         @keyframes pulse-map{0%{box-shadow:0 0 0 0 rgba(255,45,149,0.8);}70%{box-shadow:0 0 0 10px rgba(255,45,149,0);}100%{box-shadow:0 0 0 0 rgba(255,45,149,0);}}
         .pulse-animate{ animation:pulse-map 2s infinite; }
@@ -131,6 +132,7 @@
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiaHViaWdhZ2EiLCJhIjoiY2ppNHAyZTZmMGFqYjN2cnY2bGVsYTA0eiJ9.0VgDEkiumcsxoQQX3oP3Kg';
 const API_BASE_URL = '/api';
+const MIN_DISTANCE_METERS = 50;
 const textTags = [];
 let map=null;let currentUserId=null;let currentPosition=null;let currentUserMarker=null;let isMapInitialized=false;let socket=null;let isLoadingTags=false;let lastFetchTime=0;
 function showError(m){const e=document.getElementById('error-container');const t=document.getElementById('error-message');if(e&&t){t.textContent=m;e.style.display='block';setTimeout(()=>{e.style.display='none';},5e3);}}
@@ -141,12 +143,38 @@ function initWebSocket(){socket={send:d=>console.log('WebSocket message sent:',d
 function initGeolocation(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{initMap(p.coords.latitude,p.coords.longitude);updateUserPosition(p);navigator.geolocation.watchPosition(updateUserPosition,err=>{showError('Location error: '+err.message);},{enableHighAccuracy:true});},err=>{showError("Couldn't get location: "+err.message);initMap(0,0);},{timeout:1e4,enableHighAccuracy:true});}else{showError("Geolocation not supported");initMap(0,0);}}
 function initMap(lat,lon){map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v10',center:[lon,lat],zoom:15});map.addControl(new mapboxgl.NavigationControl());map.on('load',()=>{isMapInitialized=true;document.getElementById('loading').style.display='none';textTags.forEach(t=>{if(!t.marker)addTextMarker(t);});updateTagsCount();updateTagsList();});map.on('error',e=>{showError('Map error: '+(e.error?.message||'Unknown'));});}
 function updateUserPosition(p){const{latitude:lat,longitude:lon}=p.coords;currentPosition={latitude:lat,longitude:lon};document.getElementById('current-location').textContent=`Your position: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;if(!map||!isMapInitialized)return;if(!currentUserMarker){const el=document.createElement('div');el.className='user-marker';currentUserMarker=new mapboxgl.Marker(el).setLngLat([lon,lat]).addTo(map);map.flyTo({center:[lon,lat],zoom:15});}else{currentUserMarker.setLngLat([lon,lat]);}}
-function fetchTagsFromBackend(){isLoadingTags=true;document.getElementById('loading-indicator').style.display='flex';document.getElementById('no-tags-message').style.display='none';fetch('/api/recordings').then(r=>r.json()).then(data=>{const t=Date.now();textTags.forEach(tag=>{tag.marker&&tag.marker.remove();tag.textMarker&&tag.textMarker.remove();});textTags.length=0;data.forEach(rec=>{const tag={id:rec.recordingId||Math.random(),userId:rec.userId||'unknown',latitude:rec.latitude,longitude:rec.longitude,timestamp:rec.timestamp||Date.now(),text:rec.text||'',filePath:rec.filePath||null,isNew:lastFetchTime>0&&rec.timestamp>lastFetchTime};textTags.push(tag);});lastFetchTime=t;updateTagsCount();updateTagsList();}).catch(e=>{showError('Failed to fetch tags: '+e.message);}).finally(()=>{isLoadingTags=false;document.getElementById('loading-indicator').style.display='none';if(textTags.length===0)document.getElementById('no-tags-message').style.display='block';});}
+function fetchTagsFromBackend(){isLoadingTags=true;document.getElementById('loading-indicator').style.display='flex';document.getElementById('no-tags-message').style.display='none';fetch('/api/recordings').then(r=>r.json()).then(data=>{const t=Date.now();textTags.forEach(tag=>{tag.marker&&tag.marker.remove();tag.textMarker&&tag.textMarker.remove();tag.radiusMarker&&tag.radiusMarker.remove();});textTags.length=0;data.forEach(rec=>{const tag={id:rec.recordingId||Math.random(),userId:rec.userId||'unknown',latitude:rec.latitude,longitude:rec.longitude,timestamp:rec.timestamp||Date.now(),text:rec.text||'',filePath:rec.filePath||null,isNew:lastFetchTime>0&&rec.timestamp>lastFetchTime};textTags.push(tag);});lastFetchTime=t;updateTagsCount();updateTagsList();}).catch(e=>{showError('Failed to fetch tags: '+e.message);}).finally(()=>{isLoadingTags=false;document.getElementById('loading-indicator').style.display='none';if(textTags.length===0)document.getElementById('no-tags-message').style.display='block';});}
 function addTextTag(){if(!currentPosition){showError('Wait for location.');return;}const area=document.getElementById('tag-text');const text=area.value.trim();if(!text){showError('Enter text.');return;}const tag={id:'local-'+Date.now(),userId:currentUserId,latitude:currentPosition.latitude,longitude:currentPosition.longitude,timestamp:Date.now(),text:text,isNew:true};textTags.push(tag);updateTagsCount();updateTagsList();area.value='';uploadTagToBackend(tag);}
 function uploadTagToBackend(tag){const blob=new Blob([tag.text],{type:'text/plain'});const file=new File([blob],`tag_${tag.latitude}_${tag.longitude}_${tag.timestamp}.txt`,{type:'text/plain'});const fd=new FormData();fd.append('audio',file);fd.append('userId',tag.userId);fd.append('latitude',tag.latitude);fd.append('longitude',tag.longitude);fd.append('text',tag.text);fetch('/api/recordings',{method:'POST',body:fd}).then(r=>r.json()).then(()=>{showSuccess('Tag uploaded');fetchTagsFromBackend();}).catch(e=>{showError('Upload failed: '+e.message);});}
 function updateTagsCount(){const el=document.getElementById('tags-count');const c=textTags.length;el.textContent=c===0?'No text tags yet':`${c} total tag${c===1?'':'s'}`;}
 function updateTagsList(){const list=document.getElementById('tags-list');if(isLoadingTags)return;list.innerHTML='';const loader=document.createElement('div');loader.id='loading-indicator';loader.className='loading-indicator';loader.innerHTML='<div class="spinner mr-2"></div><span>Loading tags...</span>';loader.style.display='none';list.appendChild(loader);const msg=document.createElement('p');msg.id='no-tags-message';msg.className='text-center py-6';msg.textContent='No text tags available';if(textTags.length===0)msg.style.display='block';list.appendChild(msg);const sorted=[...textTags].sort((a,b)=>b.timestamp-a.timestamp);sorted.forEach(tag=>{const item=document.createElement('div');item.className='tag-item p-3 border-b border-gray-200 flex items-center justify-between';const date=new Date(tag.timestamp);const d=date.toLocaleDateString()+" "+date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});item.innerHTML=`<div class="flex-grow"><div class="font-medium">Tag by ${tag.userId}</div><div class="text-xs text-gray-500">${d}</div><div class="text-sm mt-2 text-left">${tag.text}</div></div>`;item.addEventListener('click',()=>{if(map){map.flyTo({center:[tag.longitude,tag.latitude],zoom:17});setTimeout(()=>{tag.marker&&tag.marker.togglePopup();},1e3);}});list.appendChild(item);addTextMarker(tag);});}
-function addTextMarker(tag){if(!map||!isMapInitialized)return;const el=document.createElement('div');el.className='marker-dot';const marker=new mapboxgl.Marker(el).setLngLat([tag.longitude,tag.latitude]).addTo(map);const textEl=document.createElement('div');textEl.className='mapboxgl-marker-text';textEl.textContent=tag.text.length>40?tag.text.substring(0,40)+'...':tag.text;const popup=new mapboxgl.Popup({offset:25}).setHTML(`<div class='text-left'>${tag.text}</div>`);marker.setPopup(popup);new mapboxgl.Marker({element:textEl,anchor:'center',offset:[0,-35]}).setLngLat([tag.longitude,tag.latitude]).addTo(map);tag.marker=marker;}
+function addTextMarker(tag){
+    if(!map||!isMapInitialized)return;
+    const el=document.createElement('div');
+    el.className='marker-dot';
+    const marker=new mapboxgl.Marker(el).setLngLat([tag.longitude,tag.latitude]).addTo(map);
+    const textEl=document.createElement('div');
+    textEl.className='mapboxgl-marker-text';
+    textEl.textContent=tag.text.length>40?tag.text.substring(0,40)+'...':tag.text;
+    const popup=new mapboxgl.Popup({offset:25}).setHTML(`<div class='text-left'>${tag.text}</div>`);
+    marker.setPopup(popup);
+    const textMarker=new mapboxgl.Marker({element:textEl,anchor:'center',offset:[0,-35]}).setLngLat([tag.longitude,tag.latitude]).addTo(map);
+    const rEl=document.createElement('div');
+    rEl.className='radius-mask';
+    const radiusMarker=new mapboxgl.Marker({element:rEl,anchor:'center'}).setLngLat([tag.longitude,tag.latitude]).addTo(map);
+    function updateRadius(){
+        const zoom=map.getZoom();
+        const metersPerPixel=40075016.686*Math.abs(Math.cos(tag.latitude*Math.PI/180))/Math.pow(2,zoom+8);
+        const diameter=MIN_DISTANCE_METERS*2/metersPerPixel;
+        rEl.style.width=`${diameter}px`;
+        rEl.style.height=`${diameter}px`;
+    }
+    updateRadius();
+    map.on('zoom',updateRadius);
+    tag.marker=marker;
+    tag.textMarker=textMarker;
+    tag.radiusMarker=radiusMarker;
+}
 </script>
 </body>
 </html>
