@@ -4,15 +4,26 @@ import json
 import os
 import cgi
 from urllib.parse import urlparse
+from math import radians, cos, sin, asin, sqrt
 
 PORT = int(os.environ.get('PORT', 8080))
 DATA_FILE = os.path.join(os.path.dirname(__file__), 'recordings.json')
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
+MIN_DISTANCE_METERS = 50  # Minimum distance between tags
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, 'w') as f:
         json.dump([], f)
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Return distance in meters between two lat/lon points."""
+    rlat1, rlon1, rlat2, rlon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = rlat2 - rlat1
+    dlon = rlon2 - rlon1
+    a = sin(dlat / 2)**2 + cos(rlat1) * cos(rlat2) * sin(dlon / 2)**2
+    c = 2 * asin(sqrt(a))
+    return 6371000 * c
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -66,6 +77,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Load existing data
         with open(DATA_FILE, 'r') as f:
             data = json.load(f)
+        for rec in data:
+            dist = haversine(latitude, longitude, rec.get('latitude', 0), rec.get('longitude', 0))
+            if dist < MIN_DISTANCE_METERS:
+                self.send_response(409)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'error', 'message': 'Tag too close to existing tag'}).encode())
+                return
         # Create new record
         record = {
             'recordingId': len(data) + 1,
