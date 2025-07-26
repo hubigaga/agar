@@ -140,7 +140,7 @@ PacketHandler.prototype.message_onKeySpace = function (message) {
 
 PacketHandler.prototype.message_onKeyQ = function (message) {
     if (message.length !== 1) return;
-    var tick = this.gameServer.tickCoutner;
+    var tick = this.gameServer.tickCounter;
     var dt = tick - this.lastQTick;
     if (dt < this.gameServer.config.ejectCooldown) {
         return;
